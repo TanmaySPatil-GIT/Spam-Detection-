@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ShieldAlert, ShieldCheck, Cpu, Volume2, Info, Globe, MapPin, Phone, CheckCircle2, XCircle, Download, AlertTriangle, FileText } from 'lucide-react';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../config';
 
 const AnalysisResult = ({ result, loading }) => {
   const [spamCount, setSpamCount] = useState(0);
@@ -41,7 +40,10 @@ const AnalysisResult = ({ result, loading }) => {
             }
           }
         })
-        .catch(err => console.error("Error fetching phone profile:", err));
+        .catch(err => {
+          console.error("API Error:", err);
+          console.error("Error fetching phone profile:", err);
+        });
     }
   }, [result]);
 
@@ -177,6 +179,7 @@ const AnalysisResult = ({ result, loading }) => {
         }
       }
     } catch (err) {
+      console.error("API Error:", err);
       console.error("Failed to report spam:", err);
     } finally {
       setReporting(false);
@@ -204,6 +207,7 @@ const AnalysisResult = ({ result, loading }) => {
         }
       }
     } catch (err) {
+      console.error("API Error:", err);
       console.error("Failed to vote classification:", err);
     } finally {
       setReporting(false);
@@ -232,6 +236,7 @@ const AnalysisResult = ({ result, loading }) => {
         }
       }
     } catch (err) {
+      console.error("API Error:", err);
       console.error("Failed to set list status:", err);
     }
   };

@@ -5,8 +5,7 @@ import Analytics from './Analytics';
 import AnalyzePanel from './AnalyzePanel';
 import AnalysisResult from './AnalysisResult';
 import ThreatMap from './ThreatMap';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../config';
 
 const Dashboard = ({ calls, setCalls }) => {
   const [loading, setLoading] = useState(false);
@@ -81,7 +80,9 @@ const Dashboard = ({ calls, setCalls }) => {
             setGlobalThreatFeed(data);
           }
         })
-        .catch(err => console.error("Error fetching global feed:", err));
+        .catch(err => {
+          console.error("API Error:", err);
+        });
     };
 
     fetchGlobalFeed();
@@ -103,7 +104,9 @@ const Dashboard = ({ calls, setCalls }) => {
             setGlobalThreatFeed(data);
           }
         })
-        .catch(err => console.error(err));
+        .catch(err => {
+          console.error("API Error:", err);
+        });
     };
     window.addEventListener('spamReported', handleSpamEvent);
     return () => window.removeEventListener('spamReported', handleSpamEvent);
@@ -290,6 +293,7 @@ const Dashboard = ({ calls, setCalls }) => {
       setLoading(false);
 
     } catch (error) {
+      console.error("API Error:", error);
       console.error("[Number Scan] Error received:", error.message || error);
       clearInterval(loaderInterval);
       setLoadingMessage('');

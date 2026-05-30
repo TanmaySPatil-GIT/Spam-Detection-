@@ -3,7 +3,7 @@ import Dashboard from './components/Dashboard';
 import ParticleBackground from './components/ParticleBackground';
 import Hero from './components/Hero';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from './config';
 
 function App() {
   const [calls, setCalls] = useState([]);
@@ -19,7 +19,9 @@ function App() {
         const safe = data.filter(c => c.riskLevel === 'Safe').length;
         setStats({ total: data.length, spam, safe });
       })
-      .catch(err => console.error("Error fetching calls:", err));
+      .catch(err => {
+        console.error("API Error:", err);
+      });
       
     const handleScroll = () => {
       const sections = ['hero-section', 'analyze-section', 'analytics-section', 'history-section'];
