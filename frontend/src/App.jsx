@@ -3,13 +3,15 @@ import Dashboard from './components/Dashboard';
 import ParticleBackground from './components/ParticleBackground';
 import Hero from './components/Hero';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 function App() {
   const [calls, setCalls] = useState([]);
   const [stats, setStats] = useState({ total: 0, spam: 0, safe: 0 });
   const [activeSection, setActiveSection] = useState('Home');
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/calls')
+    fetch(`${API_URL}/api/calls`)
       .then(res => res.json())
       .then(data => {
         setCalls(data);

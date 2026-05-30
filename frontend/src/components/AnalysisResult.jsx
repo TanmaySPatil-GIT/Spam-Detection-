@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ShieldAlert, ShieldCheck, Cpu, Volume2, Info, Globe, MapPin, Phone, CheckCircle2, XCircle, Download, AlertTriangle, FileText } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const AnalysisResult = ({ result, loading }) => {
   const [spamCount, setSpamCount] = useState(0);
   const [hasReported, setHasReported] = useState(false);
@@ -21,7 +23,7 @@ const AnalysisResult = ({ result, loading }) => {
       setHasReported(false);
       
       // Fetch latest aggregates from database to sync
-      fetch(`http://localhost:5000/api/calls/phone-profile/${result.phoneNumber}`)
+      fetch(`${API_URL}/api/calls/phone-profile/${result.phoneNumber}`)
         .then(res => res.json())
         .then(data => {
           if (data) {
@@ -151,7 +153,7 @@ const AnalysisResult = ({ result, loading }) => {
     if (hasReported || reporting || !result) return;
     setReporting(true);
     try {
-      const res = await fetch('http://localhost:5000/api/calls/report-spam', {
+      const res = await fetch(`${API_URL}/api/calls/report-spam`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phoneNumber: result.phoneNumber })
@@ -162,7 +164,7 @@ const AnalysisResult = ({ result, loading }) => {
         setHasReported(true);
         
         // Fetch refreshed timeline logs and classifications
-        const profileRes = await fetch(`http://localhost:5000/api/calls/phone-profile/${result.phoneNumber}`);
+        const profileRes = await fetch(`${API_URL}/api/calls/phone-profile/${result.phoneNumber}`);
         const profileData = profileRes.ok ? await profileRes.json() : null;
         if (profileData) {
           setReputation(profileData.reputation);
@@ -185,7 +187,7 @@ const AnalysisResult = ({ result, loading }) => {
     if (reporting || !result) return;
     setReporting(true);
     try {
-      const res = await fetch('http://localhost:5000/api/calls/report-community', {
+      const res = await fetch(`${API_URL}/api/calls/report-community`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phoneNumber: result.phoneNumber, classification })
@@ -211,7 +213,7 @@ const AnalysisResult = ({ result, loading }) => {
   const handleSetListStatus = async (newStatus) => {
     if (!result) return;
     try {
-      const res = await fetch('http://localhost:5000/api/calls/set-list-status', {
+      const res = await fetch(`${API_URL}/api/calls/set-list-status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phoneNumber: result.phoneNumber, status: newStatus })

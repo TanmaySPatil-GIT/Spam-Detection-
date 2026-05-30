@@ -6,6 +6,8 @@ import AnalyzePanel from './AnalyzePanel';
 import AnalysisResult from './AnalysisResult';
 import ThreatMap from './ThreatMap';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const Dashboard = ({ calls, setCalls }) => {
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
@@ -72,7 +74,7 @@ const Dashboard = ({ calls, setCalls }) => {
   // Global Threat Feed auto-update loop (polls every 10s)
   useEffect(() => {
     const fetchGlobalFeed = () => {
-      fetch('http://localhost:5000/api/calls/global-feed')
+      fetch(`${API_URL}/api/calls/global-feed`)
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {
@@ -94,7 +96,7 @@ const Dashboard = ({ calls, setCalls }) => {
       setCalls(prev => prev.map(c => c.phoneNumber === phoneNumber ? { ...c, spamReports: count } : c));
       
       // Update global feed on manual reports
-      fetch('http://localhost:5000/api/calls/global-feed')
+      fetch(`${API_URL}/api/calls/global-feed`)
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {
@@ -206,14 +208,14 @@ const Dashboard = ({ calls, setCalls }) => {
         formData.append('audioFile', data.audioFile);
         formData.append('language', 'en'); 
 
-        res = await fetch('http://localhost:5000/api/calls/analyze-audio', {
+        res = await fetch(`${API_URL}/api/calls/analyze-audio`, {
           method: 'POST',
           body: formData
         });
       } else {
         console.log('[Number Scan] API request sent');
         // Text or Number
-        res = await fetch('http://localhost:5000/api/calls/analyze', {
+        res = await fetch(`${API_URL}/api/calls/analyze`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phoneNumber: data.phone, simulateText: data.text || '' })
@@ -234,10 +236,10 @@ const Dashboard = ({ calls, setCalls }) => {
       let finalCallData = null;
       try {
         console.log('[Number Scan] Fetching full phone profile metrics');
-        const profileRes = await fetch(`http://localhost:5000/api/calls/phone-profile/${data.phone}`);
+        const profileRes = await fetch(`${API_URL}/api/calls/phone-profile/${data.phone}`);
         const profileData = profileRes.ok ? await profileRes.json() : null;
 
-        const phoneInfoRes = await fetch('http://localhost:5000/api/phone-info', {
+        const phoneInfoRes = await fetch(`${API_URL}/api/phone-info`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone: data.phone })
