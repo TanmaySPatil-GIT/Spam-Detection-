@@ -28,7 +28,7 @@ app.post('/api/phone-info', async (req, res) => {
     if (!phone) {
       return res.status(400).json({ error: 'Phone number is required' });
     }
-    
+
     const apiKey = process.env.NUMVERIFY_API_KEY;
     if (!apiKey) {
       console.error('[NumVerify Debug] Missing NUMVERIFY_API_KEY in environment.');
@@ -49,16 +49,16 @@ app.post('/api/phone-info', async (req, res) => {
     console.log('[NumVerify Debug] Raw NumVerify API response received:', data);
 
     if (data.success === false) {
-       console.warn('[NumVerify Debug] NumVerify returned success: false', data.error);
-       return res.json({
-         success: false,
-         valid: false,
-         country: 'Unknown',
-         carrier: 'Unknown',
-         lineType: 'Unknown',
-         errorReason: data.error.info || 'API access key validation or rate limit error.',
-         rawResponse: data
-       });
+      console.warn('[NumVerify Debug] NumVerify returned success: false', data.error);
+      return res.json({
+        success: false,
+        valid: false,
+        country: 'Unknown',
+        carrier: 'Unknown',
+        lineType: 'Unknown',
+        errorReason: data.error.info || 'API access key validation or rate limit error.',
+        rawResponse: data
+      });
     }
 
     const parsedData = {
@@ -85,7 +85,12 @@ app.post('/api/phone-info', async (req, res) => {
     });
   }
 });
-
+app.get("/", (req, res) => {
+  res.json({
+    status: "running",
+    message: "Spam Detection Backend Running"
+  });
+});
 // Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
