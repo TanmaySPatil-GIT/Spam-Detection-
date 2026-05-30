@@ -14,13 +14,15 @@ function App() {
     fetch(`${API_URL}/api/calls`)
       .then(res => res.json())
       .then(data => {
-        setCalls(data);
-        const spam = data.filter(c => c.riskLevel === 'Spam').length;
-        const safe = data.filter(c => c.riskLevel === 'Safe').length;
-        setStats({ total: data.length, spam, safe });
+        const callsArray = Array.isArray(data) ? data : [];
+        setCalls(callsArray);
+        const spam = callsArray.filter(c => c && c.riskLevel === 'Spam').length;
+        const safe = callsArray.filter(c => c && c.riskLevel === 'Safe').length;
+        setStats({ total: callsArray.length, spam, safe });
       })
       .catch(err => {
         console.error("API Error:", err);
+        setCalls([]);
       });
       
     const handleScroll = () => {

@@ -26,15 +26,17 @@ const Dashboard = ({ calls, setCalls }) => {
     }
   });
 
+  const callsArray = Array.isArray(calls) ? calls : [];
+
   // Calculate dynamic dashboard stats
-  const totalScans = calls.length;
-  const spamNumbers = calls.filter(c => c.riskLevel === 'Spam' || c.riskScore > 70).length;
-  const safeNumbers = calls.filter(c => c.riskLevel === 'Safe' || c.riskScore <= 30).length;
-  const highRiskNumbers = calls.filter(c => c.riskScore > 70).length;
+  const totalScans = callsArray.length;
+  const spamNumbers = callsArray.filter(c => c && (c.riskLevel === 'Spam' || c.riskScore > 70)).length;
+  const safeNumbers = callsArray.filter(c => c && (c.riskLevel === 'Safe' || c.riskScore <= 30)).length;
+  const highRiskNumbers = callsArray.filter(c => c && c.riskScore > 70).length;
 
   // Calculate Admin KPIs dynamically
   const adminStats = useMemo(() => {
-    if (calls.length === 0) {
+    if (callsArray.length === 0) {
       return { mostReported: 'N/A', topCarrier: 'N/A', topCountry: 'N/A', totalReports: 0 };
     }
 
@@ -43,7 +45,8 @@ const Dashboard = ({ calls, setCalls }) => {
     const countryCounts = {};
     let totalReports = 0;
 
-    calls.forEach(c => {
+    callsArray.forEach(c => {
+      if (!c) return;
       // Sum standard and community reports
       const reports = (c.spamReports || 0) + (c.reputation ? Object.values(c.reputation).reduce((a, b) => a + b, 0) : 0);
       totalReports += reports || 1;
@@ -68,7 +71,7 @@ const Dashboard = ({ calls, setCalls }) => {
     const topCountry = Object.entries(countryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
 
     return { mostReported, topCarrier, topCountry, totalReports };
-  }, [calls]);
+  }, [callsArray]);
 
   // Global Threat Feed auto-update loop (polls every 10s)
   useEffect(() => {
@@ -94,7 +97,10 @@ const Dashboard = ({ calls, setCalls }) => {
     // Listen for incremental spam events to sync calls history counts in real-time
     const handleSpamEvent = (e) => {
       const { phoneNumber, count } = e.detail;
-      setCalls(prev => prev.map(c => c.phoneNumber === phoneNumber ? { ...c, spamReports: count } : c));
+      setCalls(prev => {
+        const arr = Array.isArray(prev) ? prev : [];
+        return arr.map(c => c && c.phoneNumber === phoneNumber ? { ...c, spamReports: count } : c);
+      });
       
       // Update global feed on manual reports
       fetch(`${API_URL}/api/calls/global-feed`)
@@ -266,7 +272,7 @@ const Dashboard = ({ calls, setCalls }) => {
       }
       
       if (finalCallData) { 
-        setCalls(prev => [finalCallData, ...prev]);
+        setCalls(prev => [finalCallData, ...(Array.isArray(prev) ? prev : [])]);
         setLatestResult(finalCallData);
 
         // Update persistent recent scans (stores up to 20 lookups)
@@ -492,7 +498,7 @@ const Dashboard = ({ calls, setCalls }) => {
       </motion.section>
 
       {/* Global Interactive Vector Threat Map */}
-      <ThreatMap calls={calls} />
+      <ThreatMap calls={callsArray} />
 
       {/* Recharts Analytics Charts Panel */}
       <motion.section 
@@ -504,7 +510,7 @@ const Dashboard = ({ calls, setCalls }) => {
         className="scroll-mt-24"
       >
         <h2 className="text-2xl font-bold text-white mb-6 animate-pulse-slow">Threat Intelligence Overview</h2>
-        <Analytics calls={calls} />
+        <Analytics calls={callsArray} />
       </motion.section>
 
       {/* Call Scan Cards Timeline */}
@@ -518,8 +524,9 @@ const Dashboard = ({ calls, setCalls }) => {
       >
         <h2 className="text-2xl font-bold text-white mb-6">Recent Scans</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {calls.map(call => {
-             const score = call.riskScore;
+          {callsArray.map(call => {
+             if (!call) return null;
+             const score = call.riskScore || 0;
              const isSpam = score > 70;
              const isSuspicious = score >= 40 && score <= 70;
              const borderColor = isSpam ? 'border-danger' : isSuspicious ? 'border-warning' : 'border-success';
@@ -530,9 +537,9 @@ const Dashboard = ({ calls, setCalls }) => {
                  <div>
                    <div className="flex justify-between items-start mb-4">
                      <div>
-                       <h3 className="text-lg font-bold text-white">{call.phoneNumber}</h3>
+                       <h3 className="text-lg font-bold text-white">{call.phoneNumber || 'Unknown'}</h3>
                        <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold mt-1 ${badgeColor}`}>
-                         {call.riskLevel}
+                         {call.riskLevel || 'Unknown'}
                        </span>
                      </div>
                      <div className={`text-xl font-extrabold ${isSpam ? 'text-danger' : isSuspicious ? 'text-warning' : 'text-success'}`}>
@@ -562,12 +569,12 @@ const Dashboard = ({ calls, setCalls }) => {
                  </div>
 
                  <div className="text-[10px] text-gray-500 mt-4 pt-2 border-t border-gray-850">
-                   {new Date(call.date).toLocaleString()}
+                   {new Date(call.date || Date.now()).toLocaleString()}
                  </div>
                </div>
              );
           })}
-          {calls.length === 0 && <p className="text-gray-500">No recent scans available.</p>}
+          {callsArray.length === 0 && <p className="text-gray-500">No recent scans available.</p>}
         </div>
       </motion.section>
 

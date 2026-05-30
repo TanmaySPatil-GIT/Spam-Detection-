@@ -4,22 +4,25 @@ import { motion } from 'framer-motion';
 
 const ThreatMap = ({ calls }) => {
   const [hoveredCountry, setHoveredCountry] = useState(null);
+  const callsArray = Array.isArray(calls) ? calls : [];
 
   // Compute actual or mock activity based on real call history
   const countByCountry = (countryName) => {
-    return calls.filter(c => {
+    return callsArray.filter(c => {
+      if (!c) return false;
       const country = c.phoneInfo?.country || c.callerLocation?.country || '';
       return country.toLowerCase().includes(countryName.toLowerCase());
     }).length;
   };
 
   const getRiskIndex = (countryName) => {
-    const countryCalls = calls.filter(c => {
+    const countryCalls = callsArray.filter(c => {
+      if (!c) return false;
       const country = c.phoneInfo?.country || c.callerLocation?.country || '';
       return country.toLowerCase().includes(countryName.toLowerCase());
     });
     if (countryCalls.length === 0) return 15; // default baseline risk
-    const spamCount = countryCalls.filter(c => c.riskLevel === 'Spam' || c.riskScore > 70).length;
+    const spamCount = countryCalls.filter(c => c && (c.riskLevel === 'Spam' || c.riskScore > 70)).length;
     return Math.round((spamCount / countryCalls.length) * 100);
   };
 

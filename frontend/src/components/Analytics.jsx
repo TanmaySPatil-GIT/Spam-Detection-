@@ -4,6 +4,8 @@ import { ShieldAlert, TrendingUp, CheckCircle, Target, Activity } from 'lucide-r
 import { motion } from 'framer-motion';
 
 const Analytics = ({ calls }) => {
+  const callsArray = Array.isArray(calls) ? calls : [];
+
   const stats = useMemo(() => {
     let spam = 0;
     let suspicious = 0;
@@ -13,19 +15,21 @@ const Analytics = ({ calls }) => {
     const timelineData = [];
     const keywords = {};
 
-    [...calls].reverse().forEach(call => {
+    [...callsArray].reverse().forEach(call => {
+      if (!call) return;
       if (call.riskLevel === 'Spam') spam++;
       else if (call.riskLevel === 'Suspicious') suspicious++;
       else safe++;
 
       timelineData.push({
-        time: new Date(call.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        score: call.riskScore
+        time: new Date(call.date || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        score: call.riskScore || 0
       });
       
       // Extract keywords from AI reasons
       if (call.reasons) {
         call.reasons.forEach(r => {
+          if (!r) return;
           const matches = r.match(/'([^']+)'/g);
           if (matches) {
             matches.forEach(m => {
@@ -42,8 +46,8 @@ const Analytics = ({ calls }) => {
       .slice(0, 8)
       .map(([word, freq]) => ({ word, freq }));
 
-    return { total: calls.length, spam, suspicious, safe, timelineData, topKeywords };
-  }, [calls]);
+    return { total: callsArray.length, spam, suspicious, safe, timelineData, topKeywords };
+  }, [callsArray]);
 
   const pieData = [
     { name: 'Spam', value: stats.spam, color: '#ef4444' }, // text-danger
@@ -65,7 +69,7 @@ const Analytics = ({ calls }) => {
     return null;
   };
 
-  if (!calls || calls.length === 0) {
+  if (callsArray.length === 0) {
     return (
       <div className="glass-card p-12 flex flex-col items-center justify-center text-center">
         <Activity className="w-16 h-16 text-gray-600 mb-4 animate-pulse-slow" />
@@ -213,24 +217,25 @@ const Analytics = ({ calls }) => {
         >
           <h3 className="text-lg font-bold text-white tracking-wide mb-6 sticky top-0 bg-surface/90 backdrop-blur pb-2 z-10 border-b border-gray-800">Alerts Timeline</h3>
           <div className="space-y-4">
-            {[...calls].map((call, i) => {
+          {[...callsArray].map((call, i) => {
+              if (!call) return null;
               const isSpam = call.riskScore > 70;
               const isWarning = call.riskScore >= 40 && call.riskScore <= 70;
               const dotColor = isSpam ? 'bg-danger shadow-[0_0_8px_rgba(239,68,68,0.8)]' : isWarning ? 'bg-warning shadow-[0_0_8px_rgba(245,158,11,0.8)]' : 'bg-success shadow-[0_0_8px_rgba(16,185,129,0.8)]';
               
               return (
                 <div key={call._id || i} className="flex gap-4 relative">
-                  {i !== calls.length - 1 && <div className="absolute left-[7px] top-6 bottom-[-16px] w-0.5 bg-gray-800"></div>}
+                  {i !== callsArray.length - 1 && <div className="absolute left-[7px] top-6 bottom-[-16px] w-0.5 bg-gray-800"></div>}
                   <div className={`w-4 h-4 mt-1 rounded-full flex-shrink-0 z-10 ${dotColor}`}></div>
                   <div className="flex-1">
                     <p className="text-sm font-bold text-white">{call.phoneNumber}</p>
-                    <p className="text-xs text-gray-400 mb-1">{new Date(call.date).toLocaleTimeString()}</p>
-                    <p className="text-sm text-gray-300 line-clamp-1 italic">"{call.transcript}"</p>
+                    <p className="text-xs text-gray-400 mb-1">{new Date(call.date || Date.now()).toLocaleTimeString()}</p>
+                    <p className="text-sm text-gray-300 line-clamp-1 italic">"{call.transcript || ''}"</p>
                   </div>
                 </div>
               );
             })}
-            {calls.length === 0 && <p className="text-gray-500 text-center py-4">Timeline empty.</p>}
+            {callsArray.length === 0 && <p className="text-gray-500 text-center py-4">Timeline empty.</p>}
           </div>
         </motion.div>
       </div>
