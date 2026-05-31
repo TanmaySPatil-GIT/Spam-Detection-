@@ -120,6 +120,10 @@ const getLocationIntelligence = (phoneNumberStr) => {
 const evaluateTranscript = async (phoneNumber, simulateText) => {
     let transcript = simulateText || "";
     let riskScore = 0;
+
+    // Compute hash from phoneNumber for deterministic probability values used in scam type prediction
+    const cleanPhoneForHash = (phoneNumber || '').replace(/\D/g, '');
+    const hash = cleanPhoneForHash.split('').reduce((acc, char) => acc + parseInt(char), 0) || 1;
     let reasons = [];
     let detectedSignals = [];
     
